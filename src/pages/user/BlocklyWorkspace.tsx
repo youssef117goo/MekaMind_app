@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../store/AppContext';
-import { Play, Trash2, Download, RotateCcw, GripVertical, ArrowDown, Code } from 'lucide-react';
+import { Trash2, Download, RotateCcw, GripVertical, ArrowDown, Code, Cpu, Layers, X, Check } from 'lucide-react';
 
 interface Block {
   id: string;
@@ -12,28 +12,33 @@ interface Block {
 }
 
 export default function BlocklyWorkspace() {
-  const { currentClient, getBoardById } = useApp();
+  const { currentClient, boards, getBoardById } = useApp();
   const [workspace, setWorkspace] = useState<Block[]>([]);
   const [showCode, setShowCode] = useState(false);
   const [deployed, setDeployed] = useState(false);
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
+  const [showBoardsModal, setShowBoardsModal] = useState(false);
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
 
   if (!currentClient) return null;
-  const board = getBoardById(currentClient.assignedBoard);
+
+  // Use selected board or fallback to client's assigned board
+  const activeBoardId = selectedBoardId || currentClient.assignedBoard;
+  const board = getBoardById(activeBoardId);
   if (!board) return null;
 
-  // Generate toolbox blocks dynamically based on board config
+  // Generate toolbox blocks dynamically based on selected board config
   const toolboxBlocks = [
     // Input reading blocks
-    ...Object.entries(board.pinMapping.inputs).map(([key, _pin]) => ({
+    ...Object.entries(board.pinMapping.inputs).map(([key]) => ({
       type: 'read_input' as const,
       logicalId: key,
       label: `📖 قراءة ${currentClient.aliases[key] || key}`,
       color: '#4CAF50'
     })),
     // Output control blocks
-    ...Object.entries(board.pinMapping.outputs).map(([key, _pin]) => ({
+    ...Object.entries(board.pinMapping.outputs).map(([key]) => ({
       type: 'set_output' as const,
       logicalId: key,
       label: `⚡ تشغيل ${currentClient.aliases[key] || key}`,
@@ -73,7 +78,15 @@ export default function BlocklyWorkspace() {
     setDeployed(false);
   };
 
-  // Generate code from blocks (simulating the compiler)
+  const handleSelectBoard = (boardId: string) => {
+    setSelectedBoardId(boardId);
+    setShowBoardsModal(false);
+    // Clear workspace when changing board
+    setWorkspace([]);
+    setDeployed(false);
+  };
+
+  // Generate code from blocks
   const generateCode = () => {
     let code = '// === MekaMind Generated Code ===\n';
     code += `// Board: ${board.name} (${board.id})\n`;
@@ -81,7 +94,6 @@ export default function BlocklyWorkspace() {
     code += '// ================================\n\n';
     code += 'void setup() {\n';
     
-    // Setup pins
     Object.entries(board.pinMapping.inputs).forEach(([key, pin]) => {
       const alias = currentClient.aliases[key] || key;
       code += `  pinMode(${pin}, INPUT);  // ${alias} (${key})\n`;
@@ -93,7 +105,6 @@ export default function BlocklyWorkspace() {
     
     code += '}\n\nvoid loop() {\n';
     
-    // Generate logic from blocks
     workspace.forEach(block => {
       switch (block.type) {
         case 'read_input':
@@ -122,7 +133,6 @@ export default function BlocklyWorkspace() {
     return code;
   };
 
-  // Generate JSON logic (for MQTT transmission)
   const generateJSONLogic = () => {
     return {
       board_id: board.id,
@@ -143,7 +153,6 @@ export default function BlocklyWorkspace() {
 
   const handleDeploy = () => {
     setDeployed(true);
-    // In real app, this would send to backend via MQTT
     console.log('Deployed logic:', generateJSONLogic());
   };
 
@@ -159,7 +168,6 @@ export default function BlocklyWorkspace() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    // Find the block type from the dragged data
     const blockData = toolboxBlocks.find(b => b.logicalId === draggedBlock || b.label === draggedBlock);
     if (blockData) {
       addBlockToWorkspace(blockData);
@@ -174,16 +182,28 @@ export default function BlocklyWorkspace() {
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-bold">مساحة البرمجة</h1>
           <span className="text-sm text-gray-500">
-            {currentClient.name} • {board.name}
+            {currentClient.name}
           </span>
+          
+          {/* Board Selector Button */}
+          <button
+            onClick={() => setShowBoardsModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#2196F3]/10 border border-[#2196F3]/30 rounded-lg text-[#2196F3] text-sm hover:bg-[#2196F3]/20 transition-all"
+          >
+            <Layers className="w-4 h-4" />
+            <span className="font-medium">{board.name}</span>
+            <span className="text-xs opacity-70">
+              ({Object.keys(board.pinMapping.inputs).length} مداخل / {Object.keys(board.pinMapping.outputs).length} مخارج)
+            </span>
+          </button>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowCode(!showCode)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
               showCode ? 'bg-[#2a2a2a] text-white' : 'text-gray-400 hover:bg-[#2a2a2a]'
-            }`}
-          >
+            }`
+          }>
             <Code className="w-4 h-4" />
             عرض الكود
           </button>
@@ -217,19 +237,180 @@ export default function BlocklyWorkspace() {
         </div>
       </div>
 
+      {/* Boards Selection Modal */}
+      {showBoardsModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e1e1e] border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden animate-fade-in">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Layers className="w-6 h-6 text-[#2196F3]" />
+                  اختر الشريحة
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  سيتم توليد البلوكات بناءً على عدد المداخل والمخارج في الشريحة المختارة
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBoardsModal(false)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-[#2a2a2a] rounded-lg transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Boards Grid */}
+            <div className="p-6 overflow-auto max-h-[60vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {boards.map(b => {
+                  const isSelected = b.id === activeBoardId;
+                  const inputsCount = Object.keys(b.pinMapping.inputs).length;
+                  const outputsCount = Object.keys(b.pinMapping.outputs).length;
+                  
+                  return (
+                    <div
+                      key={b.id}
+                      onClick={() => handleSelectBoard(b.id)}
+                      className={`relative border rounded-xl p-5 cursor-pointer transition-all hover:scale-[1.02] ${
+                        isSelected
+                          ? 'border-[#2196F3] bg-[#2196F3]/10 ring-2 ring-[#2196F3]/30'
+                          : 'border-gray-700 bg-[#2a2a2a] hover:border-gray-500'
+                      }`}
+                    >
+                      {/* Selected Badge */}
+                      {isSelected && (
+                        <div className="absolute top-3 left-3 w-6 h-6 bg-[#2196F3] rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+
+                      {/* Board Icon & Name */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          isSelected ? 'bg-[#2196F3]/20' : 'bg-[#1e1e1e]'
+                        }`}>
+                          <Cpu className={`w-6 h-6 ${isSelected ? 'text-[#2196F3]' : 'text-gray-400'}`} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg">{b.name}</h3>
+                          <p className="text-xs text-gray-500 font-mono">{b.id}</p>
+                        </div>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-[#1e1e1e] rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-[#4CAF50]">{inputsCount}</div>
+                          <div className="text-xs text-gray-400">مداخل</div>
+                        </div>
+                        <div className="bg-[#1e1e1e] rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-[#FF9800]">{outputsCount}</div>
+                          <div className="text-xs text-gray-400">مخارج</div>
+                        </div>
+                      </div>
+
+                      {/* Pin Details */}
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-xs text-[#4CAF50] font-bold mb-1">المداخل:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(b.pinMapping.inputs).map(([key, pin]) => (
+                              <span key={key} className="text-xs bg-[#4CAF50]/10 text-[#4CAF50] px-2 py-0.5 rounded font-mono">
+                                {key} → Pin {pin}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-[#FF9800] font-bold mb-1">المخارج:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(b.pinMapping.outputs).map(([key, pin]) => (
+                              <span key={key} className="text-xs bg-[#FF9800]/10 text-[#FF9800] px-2 py-0.5 rounded font-mono">
+                                {key} → Pin {pin}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Blocks Preview */}
+                      <div className="mt-4 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-500 mb-2">سيتم توليد {inputsCount + outputsCount} بلوك:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.keys(b.pinMapping.inputs).map(key => (
+                            <span key={key} className="text-xs bg-[#4CAF50]/20 text-[#4CAF50] px-2 py-1 rounded">
+                              📖 {currentClient.aliases[key] || key}
+                            </span>
+                          ))}
+                          {Object.keys(b.pinMapping.outputs).map(key => (
+                            <span key={key} className="text-xs bg-[#FF9800]/20 text-[#FF9800] px-2 py-1 rounded">
+                              ⚡ {currentClient.aliases[key] || key}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {boards.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Cpu className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg">لا توجد شرائح متاحة</p>
+                  <p className="text-sm">يرجى إضافة شرائح من لوحة الإدارة</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-700 bg-[#1a1a1a] flex items-center justify-between">
+              <p className="text-sm text-gray-400">
+                الشريحة الحالية: <span className="text-[#2196F3] font-medium">{board.name}</span>
+              </p>
+              <button
+                onClick={() => setShowBoardsModal(false)}
+                className="px-5 py-2 bg-[#2196F3] hover:bg-[#1976D2] rounded-lg font-medium transition-all"
+              >
+                تأكيد
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex overflow-hidden">
         {/* Toolbox - Right Side (RTL) */}
         <div className="w-72 bg-[#1a1a1a] border-l border-gray-800 overflow-auto p-4">
-          <h3 className="text-sm font-bold text-gray-400 mb-3">🧩 صندوق الأدوات</h3>
-          <p className="text-xs text-gray-500 mb-4">اسحب البلوكات إلى مساحة العمل</p>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-400">🧩 صندوق الأدوات</h3>
+            <button
+              onClick={() => setShowBoardsModal(true)}
+              className="text-xs text-[#2196F3] hover:underline"
+            >
+              تغيير الشريحة
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mb-2">
+            اسحب البلوكات إلى مساحة العمل
+          </p>
+          <div className="text-xs text-gray-600 mb-4 bg-[#2a2a2a] rounded p-2">
+            الشريحة: <span className="text-[#2196F3]">{board.name}</span>
+            <br />
+            {Object.keys(board.pinMapping.inputs).length} مداخل • {Object.keys(board.pinMapping.outputs).length} مخارج
+          </div>
           
           {/* Inputs Category */}
           <div className="mb-4">
-            <h4 className="text-xs font-bold text-[#4CAF50] mb-2 uppercase">المداخل (حساسات)</h4>
+            <h4 className="text-xs font-bold text-[#4CAF50] mb-2 uppercase flex items-center gap-1">
+              <span className="w-2 h-2 bg-[#4CAF50] rounded-full"></span>
+              المداخل ({Object.keys(board.pinMapping.inputs).length})
+            </h4>
             <div className="space-y-2">
               {toolboxBlocks.filter(b => b.type === 'read_input').map((block, i) => (
                 <div
-                  key={`tool_${i}`}
+                  key={`tool_inp_${i}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.logicalId)}
                   onClick={() => addBlockToWorkspace(block)}
@@ -241,16 +422,22 @@ export default function BlocklyWorkspace() {
                   </div>
                 </div>
               ))}
+              {Object.keys(board.pinMapping.inputs).length === 0 && (
+                <p className="text-xs text-gray-600 italic">لا توجد مداخل في هذه الشريحة</p>
+              )}
             </div>
           </div>
 
           {/* Outputs Category */}
           <div className="mb-4">
-            <h4 className="text-xs font-bold text-[#FF9800] mb-2 uppercase">المخارج (محركات)</h4>
+            <h4 className="text-xs font-bold text-[#FF9800] mb-2 uppercase flex items-center gap-1">
+              <span className="w-2 h-2 bg-[#FF9800] rounded-full"></span>
+              المخارج ({Object.keys(board.pinMapping.outputs).length})
+            </h4>
             <div className="space-y-2">
               {toolboxBlocks.filter(b => b.type === 'set_output').map((block, i) => (
                 <div
-                  key={`tool_${i}`}
+                  key={`tool_out_${i}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.logicalId)}
                   onClick={() => addBlockToWorkspace(block)}
@@ -262,16 +449,22 @@ export default function BlocklyWorkspace() {
                   </div>
                 </div>
               ))}
+              {Object.keys(board.pinMapping.outputs).length === 0 && (
+                <p className="text-xs text-gray-600 italic">لا توجد مخارج في هذه الشريحة</p>
+              )}
             </div>
           </div>
 
           {/* Logic Category */}
           <div className="mb-4">
-            <h4 className="text-xs font-bold text-[#9C27B0] mb-2 uppercase">المنطق والتحكم</h4>
+            <h4 className="text-xs font-bold text-[#9C27B0] mb-2 uppercase flex items-center gap-1">
+              <span className="w-2 h-2 bg-[#9C27B0] rounded-full"></span>
+              المنطق والتحكم
+            </h4>
             <div className="space-y-2">
               {toolboxBlocks.filter(b => ['condition', 'delay', 'loop'].includes(b.type)).map((block, i) => (
                 <div
-                  key={`tool_${i}`}
+                  key={`tool_logic_${i}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.logicalId)}
                   onClick={() => addBlockToWorkspace(block)}
@@ -321,6 +514,13 @@ export default function BlocklyWorkspace() {
                   </div>
                   <p className="text-lg font-medium">اسحب البلوكات هنا للبدء</p>
                   <p className="text-sm mt-1">أو اضغط على أي بلوك من صندوق الأدوات</p>
+                  <button
+                    onClick={() => setShowBoardsModal(true)}
+                    className="mt-4 px-4 py-2 bg-[#2196F3]/10 border border-[#2196F3]/30 rounded-lg text-[#2196F3] text-sm hover:bg-[#2196F3]/20 transition-all inline-flex items-center gap-2"
+                  >
+                    <Layers className="w-4 h-4" />
+                    اختر شريحة أخرى
+                  </button>
                 </div>
               </div>
             ) : (
@@ -341,7 +541,6 @@ export default function BlocklyWorkspace() {
                         <GripVertical className="w-4 h-4 opacity-30" />
                         <span className="font-medium">{block.label}</span>
                         
-                        {/* Editable values */}
                         {block.type === 'set_output' && (
                           <select
                             value={block.value || 'HIGH'}
