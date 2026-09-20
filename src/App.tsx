@@ -9,8 +9,12 @@ import AuthPage from './pages/AuthPage';
 import GuidePage from './pages/GuidePage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
+import FounderDashboard from './pages/admin/FounderDashboard';
 import BoardsManagement from './pages/admin/BoardsManagement';
 import ClientsManagement from './pages/admin/ClientsManagement';
+import UsersManagement from './pages/admin/UsersManagement';
+import ActivityLogPage from './pages/admin/ActivityLogPage';
+import SiteSettings from './pages/admin/SiteSettings';
 import UserLayout from './pages/user/UserLayout';
 import UserDashboard from './pages/user/UserDashboard';
 import BlocklyWorkspace from './pages/user/BlocklyWorkspace';
@@ -36,9 +40,13 @@ function App() {
                 <AdminLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<Navigate to="boards" replace />} />
+              <Route index element={<FounderDashboard />} />
+              <Route path="dashboard" element={<FounderDashboard />} />
               <Route path="boards" element={<BoardsManagement />} />
               <Route path="clients" element={<ClientsManagement />} />
+              <Route path="users" element={<UsersManagement />} />
+              <Route path="activity" element={<ActivityLogPage />} />
+              <Route path="settings" element={<SiteSettings />} />
             </Route>
 
             {/* User Routes */}

@@ -1,7 +1,10 @@
 import React from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
-import { Cpu, Users, LayoutDashboard, Home, Settings, LogOut } from 'lucide-react';
+import {
+  Cpu, Users, LayoutDashboard, Home, Settings, LogOut,
+  BarChart3, Activity, Shield
+} from 'lucide-react';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -38,6 +41,21 @@ export default function AdminLayout() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           <NavLink
+            to="/admin"
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive
+                  ? 'bg-[#2196F3] text-white'
+                  : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
+              }`
+            }
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>لوحة التحكم</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/boards"
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
@@ -63,6 +81,48 @@ export default function AdminLayout() {
           >
             <Users className="w-5 h-5" />
             <span>إدارة العملاء</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/users"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive
+                  ? 'bg-[#2196F3] text-white'
+                  : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
+              }`
+            }
+          >
+            <Shield className="w-5 h-5" />
+            <span>إدارة المستخدمين</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/activity"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive
+                  ? 'bg-[#2196F3] text-white'
+                  : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
+              }`
+            }
+          >
+            <Activity className="w-5 h-5" />
+            <span>سجل النشاطات</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/settings"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive
+                  ? 'bg-[#2196F3] text-white'
+                  : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
+              }`
+            }
+          >
+            <Settings className="w-5 h-5" />
+            <span>إعدادات الموقع</span>
           </NavLink>
         </nav>
 
