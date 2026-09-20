@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Users, Code, Zap, ArrowLeft } from 'lucide-react';
+import { useUserAuth } from '../store/UserAuthContext';
+import { Cpu, Users, Code, Zap, ArrowLeft, LogIn } from 'lucide-react';
 
 export default function Landing() {
+  const { currentUser } = useUserAuth();
+
   return (
     <div className="min-h-screen bg-[#121212] text-white">
       {/* Header */}
@@ -15,13 +18,32 @@ export default function Landing() {
             <h1 className="text-2xl font-bold">MekaMind</h1>
           </div>
           <nav className="flex items-center gap-4">
-            <Link
-              to="/portal"
-              className="px-5 py-2 bg-[#2196F3] hover:bg-[#1976D2] rounded-lg font-medium transition-all flex items-center gap-2"
-            >
-              <Users className="w-4 h-4" />
-              ابدأ الآن
-            </Link>
+            {currentUser ? (
+              <Link
+                to="/portal"
+                className="px-5 py-2 bg-[#2196F3] hover:bg-[#1976D2] rounded-lg font-medium transition-all flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                لوحة التحكم
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  className="px-5 py-2 border border-[#2196F3] text-[#2196F3] hover:bg-[#2196F3] hover:text-white rounded-lg font-medium transition-all flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  to="/portal"
+                  className="px-5 py-2 bg-[#2196F3] hover:bg-[#1976D2] rounded-lg font-medium transition-all flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  ابدأ الآن
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -125,7 +147,12 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-gray-800 mt-20">
         <div className="max-w-7xl mx-auto px-6 py-8 text-center text-gray-500">
-          <p>© 2024 MekaMind - منصة IoT الذكية للبرمجة البصرية</p>
+          <p className="mb-3">© 2024 MekaMind - منصة IoT الذكية للبرمجة البصرية</p>
+          <div className="flex items-center justify-center gap-4 text-sm">
+            <Link to="/guide" className="hover:text-[#2196F3] transition-colors">📖 دليل الاستخدام</Link>
+            <span>•</span>
+            <Link to="/auth" className="hover:text-[#2196F3] transition-colors">تسجيل الدخول</Link>
+          </div>
         </div>
       </footer>
     </div>

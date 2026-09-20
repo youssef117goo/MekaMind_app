@@ -2,8 +2,11 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './store/AppContext';
 import { AuthProvider } from './store/AuthContext';
+import { UserAuthProvider } from './store/UserAuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
+import AuthPage from './pages/AuthPage';
+import GuidePage from './pages/GuidePage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import BoardsManagement from './pages/admin/BoardsManagement';
@@ -16,10 +19,13 @@ import UserSettings from './pages/user/UserSettings';
 function App() {
   return (
     <AuthProvider>
-      <AppProvider>
-        <BrowserRouter>
+      <UserAuthProvider>
+        <AppProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/guide" element={<GuidePage />} />
             
             {/* Admin Login - Public */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -45,8 +51,9 @@ function App() {
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
-      </AppProvider>
+          </BrowserRouter>
+        </AppProvider>
+      </UserAuthProvider>
     </AuthProvider>
   );
 }
