@@ -5,6 +5,7 @@ import {
   Cpu, Layers, X, Check, ChevronDown, Plus, MessageSquare,
   Monitor, Clock, AlertTriangle, Zap, Link2, RefreshCw
 } from 'lucide-react';
+import AIAssistant from '../../components/AIAssistant';
 
 // ==================== Types ====================
 type BlockCategory = 'io' | 'setup' | 'display' | 'timing' | 'telegram' | 'logic' | 'text';
@@ -950,6 +951,9 @@ export default function BlocklyWorkspace() {
           </span>
         </div>
       )}
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   );
 }
