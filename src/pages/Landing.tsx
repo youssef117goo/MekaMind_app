@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Users, Code, Zap, Shield, ArrowLeft } from 'lucide-react';
+import { Cpu, Users, Code, Zap, ArrowLeft } from 'lucide-react';
 
 export default function Landing() {
   return (
@@ -16,18 +16,11 @@ export default function Landing() {
           </div>
           <nav className="flex items-center gap-4">
             <Link
-              to="/admin"
+              to="/portal"
               className="px-5 py-2 bg-[#2196F3] hover:bg-[#1976D2] rounded-lg font-medium transition-all flex items-center gap-2"
             >
-              <Shield className="w-4 h-4" />
-              لوحة الإدارة
-            </Link>
-            <Link
-              to="/portal"
-              className="px-5 py-2 border border-[#2196F3] text-[#2196F3] hover:bg-[#2196F3] hover:text-white rounded-lg font-medium transition-all flex items-center gap-2"
-            >
               <Users className="w-4 h-4" />
-              بوابة المستخدم
+              ابدأ الآن
             </Link>
           </nav>
         </div>
@@ -61,12 +54,6 @@ export default function Landing() {
               ابدأ البرمجة الآن
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <Link
-              to="/admin"
-              className="px-8 py-4 border border-gray-600 hover:border-[#2196F3] rounded-xl font-bold text-lg transition-all"
-            >
-              لوحة الإدارة
-            </Link>
           </div>
         </div>
       </section>
@@ -85,7 +72,7 @@ export default function Landing() {
             description="اسحب البلوكات وأفلتها لبناء منطق التحكم. لا تحتاج لكتابة سطر كود واحد."
           />
           <FeatureCard
-            icon={<Shield className="w-8 h-8" />}
+            icon={<Code className="w-8 h-8" />}
             title="تحكم كامل للإدارة"
             description="الإدارة تتحكم في خريطة الـ Pins وتعيين الشرائح للعملاء مع عزل تام."
           />

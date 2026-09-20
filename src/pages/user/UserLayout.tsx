@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
-import { Cpu, LayoutDashboard, Code, Settings, Home, Shield, User } from 'lucide-react';
+import { Cpu, LayoutDashboard, Code, Settings, Home, User } from 'lucide-react';
 
 export default function UserLayout() {
   const { currentClient, clients, setCurrentClient } = useApp();
@@ -102,13 +102,6 @@ export default function UserLayout() {
           >
             <Home className="w-5 h-5" />
             <span>الصفحة الرئيسية</span>
-          </Link>
-          <Link
-            to="/admin"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#2a2a2a] hover:text-white transition-all"
-          >
-            <Shield className="w-5 h-5" />
-            <span>لوحة الإدارة</span>
           </Link>
         </div>
       </aside>
